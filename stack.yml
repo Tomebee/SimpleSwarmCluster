@@ -1,0 +1,36 @@
+version: '3.7'
+services:
+  nginx:
+    image: simple_swarm_cluster_nginx
+    deploy:
+      replicas: 1
+    ports:
+      - 9999:80
+    networks:
+      - simple_swarm_cluster_network
+      - internal_network
+    configs:
+      - source: nginx_config
+        target: /etc/nginx/nginx.conf
+  api:
+    image: simple_swarm_cluster_api_gateway
+    deploy:
+      replicas: 3
+    depends_on:
+      - nginx
+    networks:
+      - internal_network
+    expose:
+      - 81
+    entrypoint:
+      - dotnet
+      - ApiGateway.dll
+      - --urls=http://0.0.0.0:81/
+configs:
+  nginx_config:
+    file: ./Services/Nginx/nginx.conf
+
+networks:
+  simple_swarm_cluster_network:
+    external: true
+  internal_network:
